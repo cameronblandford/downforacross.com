@@ -18,8 +18,36 @@ interface ListViewProps extends GridProps {
   selectClue: (dir: 'across' | 'down', i: number) => void;
 }
 
-export default class ListView extends React.PureComponent<ListViewProps> {
+export default class ListView extends React.Component<ListViewProps> {
   _scrollToClue = this.scrollToClue.bind(this);
+
+  private previousSelectedClue: {dir: 'across' | 'down'; num: number} | null = null;
+
+  shouldComponentUpdate(nextProps: ListViewProps) {
+    // Only update if the selected clue changes
+    const currentSelected = this.getSelectedClue();
+    const nextSelected = this.getSelectedClue(nextProps);
+
+    if (currentSelected && nextSelected) {
+      if (currentSelected.dir !== nextSelected.dir || currentSelected.num !== nextSelected.num) {
+        this.previousSelectedClue = currentSelected;
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private getSelectedClue(props: ListViewProps = this.props): {dir: 'across' | 'down'; num: number} | null {
+    for (const dir of ['across', 'down'] as const) {
+      for (let i = 0; i < props.clues[dir].length; i++) {
+        if (props.isClueSelected(dir, i)) {
+          return {dir, num: i};
+        }
+      }
+    }
+    return null;
+  }
 
   get grid() {
     return new GridWrapper(this.props.grid);
